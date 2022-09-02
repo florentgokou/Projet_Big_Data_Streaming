@@ -51,7 +51,7 @@ object SparkBigData {
         print("\n")
         println("Affichage du contenu d'un lot de fichiers ou d'un repertoir")
         // Création d'un RDD à partir d'une source de données ( à revoir)
-        val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
+        //val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
         //println("lecture du contenu du rdd5")
         //rdd5.foreach{l => println(l)}
 
@@ -78,12 +78,25 @@ object SparkBigData {
 
       print("\n")
       println("val rdd_fm = rdd_trans.flatMap(x => x.split(\"\")).map(w => (w,1))")
-      val rdd_fm = rdd_trans.flatMap(x => x.split("")).map(w => (w,1))
+      val rdd_fm = rdd_trans.flatMap(x => x.split(" ")).map(w => (w,1))
       rdd_fm.foreach(l => println(l))
 
-      val rdd_compte = rdd5.flatMap(x => x.split("")).map(m => m,1)
-      rdd_compte.repartition(1).saveAsTextFile("C:\Users\Nathaniel\Dossier principal\Bethel_Info_Service\Formation Juvénal Data Engenieur\Fichiers_Access\rdd_compte.txt")
-      rdd_compte.
+     print("\n")
+      println("val rdd_compte = rdd_trans.flatMap(x => x.split(\"\")).map(m => (m,1))")
+      val rdd_compte = rdd_trans.flatMap(x => x.split(" ")).map(m => (m,1))
+      rdd_compte.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_compte.txt")
+      rdd_compte.foreach(l =>println(l))
+
+      print("\n")
+      println("val rdd_filtered = rdd_fm.filter(x => x._1.contains(\"banane\"))")
+      val rdd_filtered = rdd_fm.filter(x => x._1.contains("banane"))
+      rdd_filtered.foreach(l => println(l))
+
+      println("\n")
+      println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y )")
+      val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )
+      //rdd_reduced.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
+      rdd_reduced.foreach(l => println(l))
     }
 
     /**
