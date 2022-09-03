@@ -1,14 +1,15 @@
 //import org.apache.log4j._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-
 object SparkBigData {
 
   // Developpement d'applications Big Data en Spark
   var ss : SparkSession = null
+  //var spConf : SparKConf = null
 
   def main(args: Array[String]): Unit = {
-    val sc = Session_Spark(Env = true).sparkContext
+    val session_s = Session_Spark(Env = true)
+    val sc = session_s.sparkContext
 
     sc.setLogLevel("OFF")
     println("Affichage par la méthose : List")
@@ -48,9 +49,10 @@ object SparkBigData {
         //val rdd4 = sc.textFile( path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\TextRDD.txt")
         //println("lecture du contenu du rdd4")
         //rdd4.foreach{l => println(l)}
+
         print("\n")
-        println("Affichage du contenu d'un lot de fichiers ou d'un repertoir")
-        // Création d'un RDD à partir d'une source de données ( à revoir)
+        println("Affichage du contenu d'un lot de fichiers ou d'un repertoir // // Erreur à corriger : val rdd5 = sc.textFile(path ...")
+        // Création d'un RDD à partir d'une source de données ( à revoir)  // Erreur à corriger
         //val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
         //println("lecture du contenu du rdd5")
         //rdd5.foreach{l => println(l)}
@@ -84,7 +86,7 @@ object SparkBigData {
      print("\n")
       println("val rdd_compte = rdd_trans.flatMap(x => x.split(\"\")).map(m => (m,1))")
       val rdd_compte = rdd_trans.flatMap(x => x.split(" ")).map(m => (m,1))
-      rdd_compte.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_compte.txt")
+      //rdd_compte.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_compte.txt")
       rdd_compte.foreach(l =>println(l))
 
       print("\n")
@@ -93,10 +95,24 @@ object SparkBigData {
       rdd_filtered.foreach(l => println(l))
 
       println("\n")
-      println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y )")
-      val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )
+      println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y ) - Erreur à corriger")  //
+      //val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )  // Erreur à corriger
       //rdd_reduced.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
-      rdd_reduced.foreach(l => println(l))
+      //rdd_reduced.foreach(l => println(l))
+
+      println("\n")
+      println("rdd_fm.persist(StorageLevel.MEMORY_AND_DISK)")
+      //rdd_fm.cache()
+      //rdd_fm.persist(StorageLevel.MEMORY_AND_DISK)
+      //rdd_fm.unpersist()
+
+      println("\n")
+      println("val df : DataFrame = rdd_fm.toDF(colNames = \"text\",\"valeur\")")
+      import session_s.implicits._
+      val df : DataFrame = rdd_fm.toDF(colNames = "text","valeur")
+      df.show(numRows = 50)
+
+
     }
 
     /**
