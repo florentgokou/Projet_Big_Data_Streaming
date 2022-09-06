@@ -1,21 +1,56 @@
 //import org.apache.log4j._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
 object SparkBigData {
 
   // Developpement d'applications Big Data en Spark
   var ss : SparkSession = null
   //var spConf : SparKConf = null
+
   def main(args: Array[String]): Unit = {
     val session_s = Session_Spark(Env = true)
+    val sc = session_s.sparkContext
 
+    sc.setLogLevel("OFF")
     println("Contenu de : \\DataFrame\\2010-12-06.csv")
     val def_test = session_s.read
       .format("com.databricks.sparck.csv")
       .option("delimiter",",")
       .option("header","true")
       .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
-    def_test.show(numRows = 15)
+    //def_test.show(numRows = 15)
+    def_test.printSchema()
+
+    val def_2 = def_test.select(
+      col("InvoiceNo").cast(StringType),
+      col("_C0").alias(" ID_DU_CLEINT"),
+      col("StockCode").cast(IntegerType).alias("Code_de_la_Marchandise"),
+      col("Invoice".concat("No")).alias("ID_DE_LA_CMDE")
+    )
+    def_2.show(numRows =10)
+
+    println("df_3 = def_test.withColumn(\"InvoiceNo...")
+    val df_3 = def_test.withColumn("InvoiceNo", col("InvoiceNo").cast(StringType))
+      .withColumn("StockCode", col("StockCode").cast(IntegerType))
+      .withColumn("valeur_constante", lit(50))
+      .withColumnRenamed("_c0", "ID_client")
+      .withColumn("ID_commande", concat_ws("|", col("InvoiceNo"), col("ID_client")))
+      .withColumn("total_amount", round(col("Quantity") * col("UnitPrice"), 2))
+      .withColumn("Created_dt", current_timestamp())
+      .withColumn("reduction_test", when(col("total_amount") > 15, lit(3)).otherwise(lit(0)))
+      .withColumn("reduction", when(col("total_amount") < 15, lit(0))
+        .otherwise(when(col("total_amount").between(15, 20), lit(3))
+          .otherwise(when(col("total_amount") > 15, lit(4)))))
+      .withColumn("net_income", col("total_amount") - col("reduction"))
+
+    df_3.show(5)
+
+    println("Filtre : val df_notreduced = df_3.filter(col(\"reduction\") ===")
+    val df_notreduced = df_3.filter(col("reduction") === lit(0) && col("Country").isin("United Kingdom", "France", "USA"))
+    df_notreduced.show( 3)
+
 
     println("Contenu de :  \\Ressources\\DataFrame\\CSV\\")
     val def_gp = session_s.read
@@ -23,7 +58,7 @@ object SparkBigData {
       .option("header", "true")
       .option("inferShema","true")
       .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\CSV\\")
-    def_gp.show(numRows = 15)
+    //def_gp.show(numRows = 15)
     println("def_test count : " + def_test.count() + " def_gp count : " + def_gp.count())
 
     println("Contenu de :  \\Ressources\\DataFrame\\CSV\\2010-12-06.csv et 2011-01-20.csv")
@@ -32,10 +67,12 @@ object SparkBigData {
       .option("header", "true")
       .option("inferShema","true")
       .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-01-20.csv" , "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
-    def_gp2.show(numRows = 7)
+    //def_gp2.show(numRows = 7)
     println("def_test count : " + def_test.count() + " def_gp count : " + def_gp.count() + " def_gp2 count : " + def_gp2.count())
 
+    //manip_rdd()
   }
+
   def manip_rdd(): Unit = {
     val session_s = Session_Spark(Env = true)
     val sc = session_s.sparkContext
@@ -68,10 +105,12 @@ object SparkBigData {
     } else {
       rdd3.foreach(l => println(l))
     }
-
-    //rdd3.saveAsTextFile(path ="C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3.txt")
+    println("Exécution de : rdd3.saveAsTextFile(path =C:\\Users\\...")
+    rdd3.saveAsTextFile(path ="C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3.txt")
     //rdd3.repartition(numPartitions = 1).saveAsTextFile(path ="C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3_V2.txt")
-    //rdd3.collect().foreach( l => println(l))
+    println("Conetu de : rdd3.collect().foreach( l => println(l)) - rdd3.repartition(numPartitions = 1).saveAsTextFile(path =\"C:\\\\Users\\...")
+    rdd3.collect().foreach( l => println(l))
+
     print("\n")
     println("Affichage du contenu du fichier : TextRDD.txt  -- val rdd4 = sc.textFile( path = ) ")
     // Création d'un RDD à partir d'une source de données ( à revoir)
@@ -80,11 +119,11 @@ object SparkBigData {
     //rdd4.foreach{l => println(l)}
 
     print("\n")
-    println("Affichage du contenu d'un lot de fichiers ou d'un repertoir // // Erreur à corriger : val rdd5 = sc.textFile(path ...")
+    println("Affichage du contenu d'un lot de fichiers ou d'un repertoir // // Erreur a été corrigé")
     // Création d'un RDD à partir d'une source de données ( à revoir)  // Erreur à corriger
-    //val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
-    //println("lecture du contenu du rdd5")
-    //rdd5.foreach{l => println(l)}
+    val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
+    println("lecture du contenu du rdd5 : \\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
+    rdd5.foreach{l => println(l)}
 
     print("\n")
     println("Affichage de données transformées - Transformation des RDD")
@@ -124,10 +163,11 @@ object SparkBigData {
     rdd_filtered.foreach(l => println(l))
 
     println("\n")
-    println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y ) - Erreur à corriger")  //
-    //val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )  // Erreur à corriger
-    //rdd_reduced.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
-    //rdd_reduced.foreach(l => println(l))
+    println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y ) - Erreur à été corrigé")  //
+    val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )  // Erreur à corriger
+    rdd_reduced.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
+    println("Affichage du contenu de rdd_reduced")
+    rdd_reduced.foreach(l => println(l))
 
     println("\n")
     println("rdd_fm.persist(StorageLevel.MEMORY_AND_DISK)")
