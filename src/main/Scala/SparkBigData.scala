@@ -1,13 +1,32 @@
 //import org.apache.log4j._
+import org.apache.hadoop.fs._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.plans._
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
 object SparkBigData {
 
   // Developpement d'applications Big Data en Spark
   var ss : SparkSession = null
   //var spConf : SparKConf = null
+
+  val schema_order = StructType(Array(
+    StructField("orderid", IntegerType, false),
+    StructField("customerid", IntegerType, false),
+    StructField("campaignid", IntegerType, true),
+    StructField("orderdate", TimestampType, true),
+    StructField("city", StringType, true),
+    StructField("state", StringType, true),
+    StructField("zipcode", StringType, true),
+    StructField("paymenttype", StringType, true),
+    StructField("totalprice", DoubleType, true),
+    StructField("numorderlines", IntegerType, true),
+    StructField("numunits", IntegerType, true)
+    )
+  )
 
   def main(args: Array[String]): Unit = {
     val session_s = Session_Spark(Env = true)
@@ -21,7 +40,7 @@ object SparkBigData {
       .option("header","true")
       .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
     //def_test.show(numRows = 15)
-    def_test.printSchema()
+    //def_test.printSchema()
 
     val def_2 = def_test.select(
       col("InvoiceNo").cast(StringType),
@@ -29,7 +48,7 @@ object SparkBigData {
       col("StockCode").cast(IntegerType).alias("Code_de_la_Marchandise"),
       col("Invoice".concat("No")).alias("ID_DE_LA_CMDE")
     )
-    def_2.show(numRows =10)
+    //def_2.show(numRows =10)
 
     println("df_3 = def_test.withColumn(\"InvoiceNo...")
     val df_3 = def_test.withColumn("InvoiceNo", col("InvoiceNo").cast(StringType))
@@ -45,11 +64,112 @@ object SparkBigData {
           .otherwise(when(col("total_amount") > 15, lit(4)))))
       .withColumn("net_income", col("total_amount") - col("reduction"))
 
-    df_3.show(5)
+    //df_3.show(5)
 
     println("Filtre : val df_notreduced = df_3.filter(col(\"reduction\") ===")
     val df_notreduced = df_3.filter(col("reduction") === lit(0) && col("Country").isin("United Kingdom", "France", "USA"))
-    df_notreduced.show( 3)
+    //df_notreduced.show( 3)
+
+    // Jointure de la DataFrame
+    println("\n")
+    println("Contenu de orders.txt avec val df_orders = session_s.read")
+    val df_orders = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", "\t")
+      .option("header", "true")
+      .schema(schema_order)
+      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orders.txt")
+    df_orders.printSchema()
+    df_orders.show(numRows = 15)
+
+    println("val df_ordersGood =  df_orders.withColumnRenamed")
+     val df_ordersGood =  df_orders.withColumnRenamed("numunits", "numunits_order")
+      .withColumnRenamed("totalprice", "totalprice_order")
+       .withColumnRenamed("orderid", "orderid_order")
+    df_ordersGood.printSchema()
+
+    println("val df_products = session_s.read")
+    val df_products = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", "\t")
+      .option("header", "true")
+      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\product.txt")
+
+    println("val df_productsGood =  df_products.withColumnRenamed")
+    val df_productsGood =  df_products.withColumnRenamed("PRODUCTID", "PRODUCTID_PRD")
+
+    println("val df_orderslines = session_s.read")
+    val df_orderslines = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", "\t")
+      .option("header", "true")
+      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orderline.txt")
+
+     val de_joinOrders = df_orderslines.join(df_ordersGood, df_ordersGood.col("orderid_order") === df_orderslines.col("orderid"), "inner")
+       .join(df_productsGood, df_productsGood.col("PRODUCTID_PRD") === df_orderslines.col("PRODUCTID"), Inner.sql)
+
+    println("\n")
+    //de_joinOrders.printSchema()
+
+    println("Union des trois fichiers 2010-12-06.csv - 2011-01-20.csv - 2011-12-08.csv")
+    val def_fichier1 = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", ",")
+      .option("header", "true")
+      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
+
+    val def_fichier2 = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", ",")
+      .option("header", "true")
+      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-01-20.csv")
+
+    val def_fichier3 = session_s.read
+      .format("com.databricks.spark.csv")
+      .option("delimiter", ",")
+      .option("header", "true")
+      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-12-08.csv")
+
+      val df_unitedfiles = def_fichier1.union(def_fichier2.union(def_fichier3))
+      //println(def_fichier3.count() + " "+ df_unitedfiles.count())
+
+      // Manipulations avancées de data frames : agrégats et fenêtrage
+    println("Manipulations avancées de data frames : agrégats et fenêtrage")
+    de_joinOrders.withColumn("Total_amount", round(col("numunits")*col("totalprice_order"), scale=3))
+      .groupBy("city")
+      .sum("Total_amount").alias("Commande_Total")
+      //.show()
+
+
+    // Opération de fenêtrage
+    println("Opération de fenêtrage")
+    val wn_spec = Window.partitionBy(col("state"))
+    val def_windows = de_joinOrders.withColumn("ventes_dep",sum(round(col("numunits") * col("totalprice_order"), scale=3)).over(wn_spec))
+      .select(
+        col("orderlineid"),
+        col("orderid_order"),
+        col("PRODUCTID_PRD"),
+        col("state"),
+        round(col("ventes_dep"), scale=3).alias("Vente_par_département")
+      )//.show(10)
+
+    //Persister les data frame sur disque/HDFS -- Sur le DD
+    def_windows
+      .repartition(1)
+      .write
+      .format("com.databricks.spark.csv")
+      .mode(SaveMode.Overwrite)
+      .option("header","true")
+      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\Ecriture")
+
+    // Exemple de propriété d'un format
+      def_2.write
+      .option("orc.bloom.filter.columns","favorite_color")
+      .option("orc.dictionary.key.threshold","1.0")
+      .option("orc.column.encoding.direct","name")
+      .orc("users_with_option_orc")
+
+    //Persister les data frame sur disque/HDFS  -- Sur HDFS
 
 
     println("Contenu de :  \\Ressources\\DataFrame\\CSV\\")
@@ -70,7 +190,37 @@ object SparkBigData {
     //def_gp2.show(numRows = 7)
     println("def_test count : " + def_test.count() + " def_gp count : " + def_gp.count() + " def_gp2 count : " + def_gp2.count())
 
+    // Exécution des autres fonctions
+
     //manip_rdd()
+  }
+
+  def Spark_hdfs() : Unit  = {
+    val config_fs = Session_Spark(true).sparkContext.hadoopConfiguration
+    val fs = FileSystem.get(config_fs)
+
+    val src_pth = new Path("/user/dtalake/marketing/")
+    val desc_pth = new Path("/user/dtalake/indexes/")
+    val ren_src = new Path("/user/dtalake/marketing/fichier_reporting.parquet")
+    val dest_src = new Path("/user/dtalake/marketing/reporting.parquet")
+    val local_path = new Path("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\Ecriture\\parts.csv")
+    val path_local = new Path("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame")
+
+    // Lesture des fichiers d'un dossier
+    val files_list = fs.listStatus(src_pth).map(x => x.getPath)
+    for(i <- 1 to files_list.length) {
+      println(files_list)
+    }
+
+    // Renommage des fichiers
+    fs.rename(ren_src,dest_src)
+
+    //Supprimer des fichiers dans un dossier
+    fs.delete(dest_src,true)
+
+    // Copie de fichiers
+    fs.copyFromLocalFile(local_path, desc_pth)
+    fs.copyToLocalFile(desc_pth, path_local)
   }
 
   def manip_rdd(): Unit = {
@@ -114,13 +264,13 @@ object SparkBigData {
     print("\n")
     println("Affichage du contenu du fichier : TextRDD.txt  -- val rdd4 = sc.textFile( path = ) ")
     // Création d'un RDD à partir d'une source de données ( à revoir)
-    //val rdd4 = sc.textFile( path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\TextRDD.txt")
+    val rdd4 = sc.textFile( path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\TextRDD.txt")
     println("lecture du contenu du rdd4")
-    //rdd4.foreach{l => println(l)}
+    rdd4.foreach{l => println(l)}
 
     print("\n")
     println("Affichage du contenu d'un lot de fichiers ou d'un repertoir // // Erreur a été corrigé")
-    // Création d'un RDD à partir d'une source de données ( à revoir)  // Erreur à corriger
+    // Création d'un RDD à partir d'une source de données   // Erreur à été corriger
     val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
     println("lecture du contenu du rdd5 : \\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
     rdd5.foreach{l => println(l)}
