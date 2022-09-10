@@ -1,11 +1,13 @@
-//import org.apache.log4j._
 import org.apache.hadoop.fs._
+import org.apache.log4j._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.plans._
-import org.apache.spark.sql.expressions.Window
+import org.apache.spark.sql.expressions._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+
+
 
 object SparkBigData {
 
@@ -80,13 +82,13 @@ object SparkBigData {
       .schema(schema_order)
       .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orders.txt")
     df_orders.printSchema()
-    df_orders.show(numRows = 15)
+    //df_orders.show(numRows = 15)
 
     println("val df_ordersGood =  df_orders.withColumnRenamed")
      val df_ordersGood =  df_orders.withColumnRenamed("numunits", "numunits_order")
       .withColumnRenamed("totalprice", "totalprice_order")
        .withColumnRenamed("orderid", "orderid_order")
-    df_ordersGood.printSchema()
+    //df_ordersGood.printSchema()
 
     println("val df_products = session_s.read")
     val df_products = session_s.read
@@ -153,6 +155,53 @@ object SparkBigData {
         round(col("ventes_dep"), scale=3).alias("Vente_par_département")
       )//.show(10)
 
+    println("Manipulation des dates et du temps en Spark")
+    //orderdate: string (nullable = true)
+    df_ordersGood.withColumn("date_lecture",date_format(current_date(),"dd/MMMM/yyyy hh:mm:ss" ) )
+      .withColumn("date_lecture_complete",current_timestamp())
+      //.withColumn("periode_secondes",window(col("orderdate"),"5 seconds"))
+      .withColumn("periode_jour",window(col("orderdate"),"5 days"))
+      .select(
+        /*col("periode_secondes"),
+        col("periode_secondes.start"),
+        col("periode_secondes.end") */
+        col("periode_jour"),
+        col("periode_jour.start"),
+        col("periode_jour.end")
+      )
+
+      df_unitedfiles.withColumn("InvoiceDate", to_date(col("InvoiceDate")))
+        .withColumn("InvoiceTimestamp", col("InvoiceTimestamp").cast(TimestampType))
+        .withColumn("Invoice_add_2months",add_months(col("InvoiceDate"),2))
+        .withColumn("Invoice_add_date",date_add(col("InvoiceDate"),30))
+        .withColumn("Invoice_sub_date",date_sub(col("InvoiceDate"),25))
+        .withColumn("Invoice_date_diff",datediff(current_date(), col("InvoiceDate")))
+        .withColumn("InvoiceDateQuarter",quarter(col("InvoiceDate")))
+        .withColumn("InvoiceDate_id",unix_timestamp(col("InvoiceDate")))
+        .withColumn("InvoiceDate_format",from_unixtime(unix_timestamp(col("InvoiceDate")),"dd-MM-yyyy"))
+
+    // Methode de validation de données - .count()
+    println("\n")
+    println("Methode de validation de données .count()")
+    df_products
+      .withColumn("productGp",substring(col("PRODUCTNAME"), pos = 2, len = 2))
+      .withColumn("productln", length(col("PRODUCTGROUPNAME")))
+      .withColumn("concat_product", concat_ws("|", col("PRODUCTID"), col("INSTOCKFLAG")))
+      .withColumn("PRODUCTGROUPCODEMIN", lower(col("PRODUCTGROUPCODE")))
+      //.where(regexp_extract(col("PRODUCTID")), "[0-9]{5}",0) trim(col("PRODUCTID"))
+      .where(!col("PRODUCTID").rlike("[0-9]{5}"))
+      //.count()
+      //.show(10)
+
+   /* import session_s.implicits._
+    val phone_list : DataFrame = list("09102998282","0910293735","+0810299828").toDF("phone_number") // à coriger
+    phone_list
+      .withColumn("test_phone",valid_phoneUDF(col("phone_number")))
+      .show()
+*/
+    println("\n")
+    //df_ordersGood.show(10)
+  /*
     //Persister les data frame sur disque/HDFS -- Sur le DD
     def_windows
       .repartition(1)
@@ -168,10 +217,9 @@ object SparkBigData {
       .option("orc.dictionary.key.threshold","1.0")
       .option("orc.column.encoding.direct","name")
       .orc("users_with_option_orc")
+  */
 
     //Persister les data frame sur disque/HDFS  -- Sur HDFS
-
-
     println("Contenu de :  \\Ressources\\DataFrame\\CSV\\")
     val def_gp = session_s.read
       .format("csv")
@@ -194,7 +242,21 @@ object SparkBigData {
 
     //manip_rdd()
   }
+/*
+  //Savoir construire et enregistrer des UDF
+  def valid_phone(phone_to_test : String) : Boolean = {
+    var result :  Boolean = false
+    val motif_regexp = "^0[0-9]{9}".r
 
+    if (motif_regexp.findAllIn(phone_to_test.trim) == phone_to_test.trim) {
+      result = true
+    } else {
+      result = false
+    }
+    return result
+  }
+  val valid_phoneUDF : UserDefinedFunction = udf{(phone_to_test : String) => valid_phone(phone_to_test : String)}
+*/
   def Spark_hdfs() : Unit  = {
     val config_fs = Session_Spark(true).sparkContext.hadoopConfiguration
     val fs = FileSystem.get(config_fs)
