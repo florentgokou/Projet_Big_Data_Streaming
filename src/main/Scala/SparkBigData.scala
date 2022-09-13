@@ -219,6 +219,27 @@ object SparkBigData {
       .orc("users_with_option_orc")
   */
 
+    // Exécution du SQL sans le HiveQL
+    println("// Exécution du SQL sans le HiveQL")
+    de_joinOrders.createTempView("orders")
+
+    // SQL de Spark
+    val df_sql = session_s.sql("""
+      select state, city, sum( round(numunits * totalprice )) as Commande_Totales from orders group by state, city
+    """).show()
+
+    // C'est la mâme requête en RDD - DataFrame
+    de_joinOrders.withColumn("total_amount",round(col("numunits") * col("totalprice"), 3))
+      .groupBy("state","city")
+      .sum("total_amount").as("Commande Totales")
+      .show()
+
+    // Ce sont des opérations qui se font beaucoup. Mais dans notre cas, ça ne va pas marcher car on n'a pas de MetaStore
+    /*
+    val df_hive = session_s.table("Orders") // Lire une table à partir du metastore Hive
+    df_sql.write.mode(SaveMode.Overwrite).saveAsTable("report_orders") // enregistrer et écrire un Dataframe dans un DataStore Hive
+    */
+
     //Persister les data frame sur disque/HDFS  -- Sur HDFS
     println("Contenu de :  \\Ressources\\DataFrame\\CSV\\")
     val def_gp = session_s.read
