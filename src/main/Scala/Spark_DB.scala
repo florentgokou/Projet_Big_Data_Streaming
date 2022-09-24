@@ -52,7 +52,6 @@ object Spark_DB {
     df_postgre.show(15)
     */
 
-
     /*
     println("Autre methode : Création du DataFrame qui contiendra les données venant de PostgreSQL")
     // Cette requête ne marchera pas car dans PostgreSQL, la requête avec l'option "Query" n'est pas autorisée

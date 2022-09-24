@@ -32,9 +32,12 @@ object Spark_Hbase {
       .options(Map(HBaseTableCatalog.tableCatalog -> catalog_orders))
       .format("org.apache.spark.sql.execution.datasources.hbase")
       .load()
+    println("df_hbase.printSchema()")
     df_hbase.printSchema()
+    println("df_hbase.show(truncate = false)")
     df_hbase.show(truncate = false)
     df_hbase.createOrReplaceTempView("Orders")
+    println("ss.sql(\"select * from Orders where state='MA'\").show()")
     ss.sql("select * from Orders where state='MA'").show()
   }
 
