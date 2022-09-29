@@ -1,18 +1,39 @@
 import scala.collection.mutable._
 import scala.tools.nsc.doc.model.Public
+import org.apache.log4j._
+import java.io.FileNotFoundException
+import scala.io._
 
 object HelloWoldBigData {
   /* premier programme */
   val ma_var_imm : String = "Florent GOKOU" // variable immutable = constante
   private val une_var_imm : String =  "Formation Big Data" // variable à portée privée
 
-  class person(
-                var nom : String,
-                var prenom : String,
-                var age : Int
-              )
+  class person( var nom : String, var prenom : String, var age : Int )
+  BasicConfigurator.configure()
+  private var trace_appli : Logger = LogManager.getLogger("Logger_Consol")
 
   def main(arg: Array[String]) :Unit = {
+
+
+    val diviseur : Double = try{
+      division(12,3)
+    } catch {
+      case ex : ArithmeticException => 0
+      case ex2 : IllegalArgumentException => 0
+    }
+    trace_appli.info(s"La valeur de votre division est de : ${diviseur}")
+
+    lecture_fichier("C:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orders.txt")
+
+    println("Logger de convert_entier")
+    val nombre : Int = convert_entier("100")
+    trace_appli.info(s"La valeur de votre nombre converti est : ${nombre}")
+    println("\n")
+    println("Logger de  Comptage_caracteres")
+    val Nombre_carataire : Int = comptage_caracteres("GOKOU")
+    trace_appli.info(s"Nombre de carataires est : ${Nombre_carataire}")
+
     //print("Hello Wold : Mon premier programme en Scala\n")
     var test_mu: Int = 15  // variable mutable
     test_mu = test_mu + 10
@@ -32,10 +53,21 @@ object HelloWoldBigData {
   }
 
   // ma première fonction
-  def Comptage_caracteres(texte : String) : Int = {
-    texte.trim.length()
-
+  println("\n")
+  println("Comptage_caracteres - Démarrage du traçage de la classe)")
+  def comptage_caracteres(texte : String) : Int = {
+    //texte.trim.length()
+    trace_appli.info("Démarrage du traçage de la classe")
+    trace_appli.info(s"Le paramètre tracé par Log4j pour cette fonction est : $texte")
+    trace_appli.warn(s"Message d'avertissement Loj4J interpolation de chaine : ${10 + 15}")
+    if (texte.isEmpty){
+      0
+    } else{
+      texte.trim.length()
+    }
   }
+  println("fin du traçage de la classe)")
+
 
   // structure conditionnelle
   def testWhile(valeur_cond: Int): Unit = {
@@ -117,5 +149,34 @@ object HelloWoldBigData {
   // Les Tableau ou Array
   val montableau : Array[String] = Array("jvc","Florent","test")
   montableau.foreach(e => println(e))
+
+  //Gérer les exceptions avec Try{} Catch{} Finally {}
+  println("\n")
+  println("Utilisation d'un gestionnaire d'erreur")
+  def convert_entier (nombre_chaine : String) : Int = {
+    try {
+      val nombre: Int = nombre_chaine.toInt
+      return nombre
+    } catch {
+          //trace_appli.error("La fonction agénérée une erreur. LA valeur 0 a été attribuée par défaut")
+      case ex: Exception => 0
+    }
+  }
+
+  def lecture_fichier(chemin_fichier: String): Unit = {
+    try {
+      val fichier = Source.fromFile(chemin_fichier)
+      fichier.getLines()
+      fichier.close()
+      trace_appli.info("Votre fichier a été retrouvé")
+    } catch {
+      case ex : FileNotFoundException => trace_appli.error("Votre fichier est introuvable. Vérifier le chemin d'accès" + ex.printStackTrace())
+    }
+  }
+  println("Fonction Division")
+  def division(numerateur : Int, denominateur : Int) : Double = {
+  val resultat = numerateur/denominateur
+    return resultat
+  }
 }
 

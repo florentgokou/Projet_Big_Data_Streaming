@@ -3,17 +3,19 @@ import org.apache.log4j._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.apache.spark.sql.catalyst.plans._
-import org.apache.spark.sql.expressions._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-
-
+import org.apache.spark.streaming._
+import java.io.FileNotFoundException
+import org.apache.spark.sql.expressions.Window.partitionBy
 
 object SparkBigData {
 
   // Developpement d'applications Big Data en Spark
   var ss : SparkSession = null
   //var spConf : SparKConf = null
+
+  private var trace_log : Logger = LogManager.getLogger("Logger_Consol")
 
   val schema_order = StructType(Array(
     StructField("orderid", IntegerType, false),
@@ -40,7 +42,7 @@ object SparkBigData {
       .format("com.databricks.sparck.csv")
       .option("delimiter",",")
       .option("header","true")
-      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
+      .csv("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
     //def_test.show(numRows = 15)
     //def_test.printSchema()
 
@@ -80,7 +82,7 @@ object SparkBigData {
       .option("delimiter", "\t")
       .option("header", "true")
       .schema(schema_order)
-      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orders.txt")
+      .load("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orders.txt")
     df_orders.printSchema()
     //df_orders.show(numRows = 15)
 
@@ -95,7 +97,7 @@ object SparkBigData {
       .format("com.databricks.spark.csv")
       .option("delimiter", "\t")
       .option("header", "true")
-      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\product.txt")
+      .load("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\product.txt")
 
     println("val df_productsGood =  df_products.withColumnRenamed")
     val df_productsGood =  df_products.withColumnRenamed("PRODUCTID", "PRODUCTID_PRD")
@@ -105,7 +107,7 @@ object SparkBigData {
       .format("com.databricks.spark.csv")
       .option("delimiter", "\t")
       .option("header", "true")
-      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orderline.txt")
+      .load("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\orderline.txt")
 
      val de_joinOrders = df_orderslines.join(df_ordersGood, df_ordersGood.col("orderid_order") === df_orderslines.col("orderid"), "inner")
        .join(df_productsGood, df_productsGood.col("PRODUCTID_PRD") === df_orderslines.col("PRODUCTID"), Inner.sql)
@@ -118,19 +120,19 @@ object SparkBigData {
       .format("com.databricks.spark.csv")
       .option("delimiter", ",")
       .option("header", "true")
-      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
+      .csv("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
 
     val def_fichier2 = session_s.read
       .format("com.databricks.spark.csv")
       .option("delimiter", ",")
       .option("header", "true")
-      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-01-20.csv")
+      .csv("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-01-20.csv")
 
     val def_fichier3 = session_s.read
       .format("com.databricks.spark.csv")
-      .option("delimiter", ",")
+        .option("delimiter", ",")
       .option("header", "true")
-      .csv("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-12-08.csv")
+      .csv("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-12-08.csv")
 
       val df_unitedfiles = def_fichier1.union(def_fichier2.union(def_fichier3))
       //println(def_fichier3.count() + " "+ df_unitedfiles.count())
@@ -145,7 +147,8 @@ object SparkBigData {
 
     // Opération de fenêtrage
     println("Opération de fenêtrage")
-    val wn_spec = Window.partitionBy(col("state"))
+    //val wn_spec = Window.partitionBy(col("state"))
+    val wn_spec = partitionBy(col("state"))
     val def_windows = de_joinOrders.withColumn("ventes_dep",sum(round(col("numunits") * col("totalprice_order"), scale=3)).over(wn_spec))
       .select(
         col("orderlineid"),
@@ -246,7 +249,7 @@ object SparkBigData {
       .format("csv")
       .option("header", "true")
       .option("inferShema","true")
-      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\CSV\\")
+      .load("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\CSV\\")
     //def_gp.show(numRows = 15)
     println("def_test count : " + def_test.count() + " def_gp count : " + def_gp.count())
 
@@ -255,7 +258,7 @@ object SparkBigData {
       .format("csv")
       .option("header", "true")
       .option("inferShema","true")
-      .load("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2011-01-20.csv" , "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
+      .load("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\2010-12-06.csv")
     //def_gp2.show(numRows = 7)
     println("def_test count : " + def_test.count() + " def_gp count : " + def_gp.count() + " def_gp2 count : " + def_gp2.count())
 
@@ -286,8 +289,8 @@ object SparkBigData {
     val desc_pth = new Path("/user/dtalake/indexes/")
     val ren_src = new Path("/user/dtalake/marketing/fichier_reporting.parquet")
     val dest_src = new Path("/user/dtalake/marketing/reporting.parquet")
-    val local_path = new Path("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\Ecriture\\parts.csv")
-    val path_local = new Path("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame")
+    val local_path = new Path("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame\\Ecriture\\parts.csv")
+    val path_local = new Path("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Ressources\\DataFrame")
 
     // Lesture des fichiers d'un dossier
     val files_list = fs.listStatus(src_pth).map(x => x.getPath)
@@ -339,22 +342,22 @@ object SparkBigData {
       rdd3.foreach(l => println(l))
     }
     println("Exécution de : rdd3.saveAsTextFile(path =C:\\Users\\...")
-    rdd3.saveAsTextFile(path ="C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3.txt")
-    //rdd3.repartition(numPartitions = 1).saveAsTextFile(path ="C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3_V2.txt")
+    rdd3.saveAsTextFile(path ="D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3.txt")
+    //rdd3.repartition(numPartitions = 1).saveAsTextFile(path ="D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Data\\rdd3_V2.txt")
     println("Conetu de : rdd3.collect().foreach( l => println(l)) - rdd3.repartition(numPartitions = 1).saveAsTextFile(path =\"C:\\\\Users\\...")
     rdd3.collect().foreach( l => println(l))
 
     print("\n")
     println("Affichage du contenu du fichier : TextRDD.txt  -- val rdd4 = sc.textFile( path = ) ")
     // Création d'un RDD à partir d'une source de données ( à revoir)
-    val rdd4 = sc.textFile( path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\TextRDD.txt")
+    val rdd4 = sc.textFile( path = "D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\TextRDD.txt")
     println("lecture du contenu du rdd4")
     rdd4.foreach{l => println(l)}
 
     print("\n")
     println("Affichage du contenu d'un lot de fichiers ou d'un repertoir // // Erreur a été corrigé")
     // Création d'un RDD à partir d'une source de données   // Erreur à été corriger
-    val rdd5 = sc.textFile(path = "C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
+    val rdd5 = sc.textFile(path = "D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
     println("lecture du contenu du rdd5 : \\Formation Juvénal Data Engenieur\\Fichiers_Access\\*")
     rdd5.foreach{l => println(l)}
 
@@ -398,7 +401,7 @@ object SparkBigData {
     println("\n")
     println("val rdd_reduced = rdd_fm.reduceByKey((x,y) => x + y ) - Erreur à été corrigé")  //
     val rdd_reduced = rdd_fm.reduceByKey((x, y) => x + y )  // Erreur à corriger
-    rdd_reduced.repartition(1).saveAsTextFile("C:\\Users\\Nathaniel\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
+    rdd_reduced.repartition(1).saveAsTextFile("D:\\Dossier principal\\Bethel_Info_Service\\Formation Juvénal Data Engenieur\\Fichiers_Access\\rdd_reduced.txt")
     println("Affichage du contenu de rdd_reduced")
     rdd_reduced.foreach(l => println(l))
 
@@ -423,21 +426,53 @@ object SparkBigData {
    */
 
   def Session_Spark(Env: Boolean = true): SparkSession = {
-    if (Env == true) {
-      System.setProperty("hadoop.home.dir", "c:/Hadoop/")
-      ss = SparkSession.builder
-        .master(master = "local[*]")
-        .config("spark.sql.crossJoin.enabled", "true")
-        //.enableHiveSupport()
-        .getOrCreate()
-    } else {
-      ss = SparkSession.builder()
-        .appName(name = "Mon application Spark")
-        .config("spark.serializer", "org.apache.spark.serializer.kryoSerializer")
-        .config("spark.sql.crossJoin.enabled", "true")
-        //.enableHiveSupport()
-        .getOrCreate()
+    try {
+
+      if (Env == true) {
+        System.setProperty("hadoop.home.dir", "c:/Hadoop/") // à Logger
+        ss = SparkSession.builder
+          .master(master = "local[*]")
+          .config("spark.sql.crossJoin.enabled", "true")
+          //.enableHiveSupport()
+          .getOrCreate()
+      } else {
+        ss = SparkSession.builder()
+          .appName(name = "Mon application Spark")
+          .config("spark.serializer", "org.apache.spark.serializer.kryoSerializer")
+          .config("spark.sql.crossJoin.enabled", "true")
+          //.enableHiveSupport()
+          .getOrCreate()
+      }
     }
-    ss
+    catch {
+      case ex : FileNotFoundException => trace_log.error("Nous n'avons pas trouvé le winutils dans le chemin indiqué" + ex.printStackTrace())
+      case ex : Exception => trace_log.error("Erreur dans l'initialisation de la session Spark " + ex.printStackTrace() )
+    }
+    return  ss
   }
+
+  /**
+   * fonction qui initialise le contexte Spark Streaming
+   *
+   * @param env         : environnement sur lequel est déployé notre application. Si true, alors on est en localhost
+   * @param duree_batch : c'est le SparkStreamingBatchDuration - où la durée du micro-batch
+   * @return : la fonction renvoie en résultat une instance du contexte Streaming
+   */
+/*
+  def getSparkStreamingContext(env: Boolean = true, duree_batch: Int): StreamingContext = {
+    trace_log.info("initialisation du contexte Spark Streaming")
+    if (env) {
+      spConf = new SparkConf().setMaster("local[*]")
+        .setAppName("Mon application streaming")
+    } else {
+      spConf = new SparkConf().setAppName("Mon application streaming")
+    }
+    trace_log.info(s"la durée du micro-bacth Spark est définie à : $duree_batch secondes")
+    //val ssc: StreamingContext = new StreamingContext(spConf, Seconds(duree_batch))
+    val ssc : Int = 0
+    return ssc
+
+
+  }
+ */
 }

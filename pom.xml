@@ -18,6 +18,8 @@
         <cassandra.spark.connector.version>2.4.1</cassandra.spark.connector.version>
         <elasticsearch.spark.connector.version>7.11.2</elasticsearch.spark.connector.version>
         <commons.http.client.version>3.1</commons.http.client.version>
+        <log4j.version>2.13.3</log4j.version>
+        <junit.version>4.12</junit.version>
 
     </properties>
 
@@ -133,6 +135,27 @@
             <groupId>commons-httpclient</groupId>
             <artifactId>commons-httpclient</artifactId>
             <version>${commons.http.client.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-api -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${log4j.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/junit/junit -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
