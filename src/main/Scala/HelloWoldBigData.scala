@@ -4,17 +4,30 @@ import org.apache.log4j._
 import java.io.FileNotFoundException
 import scala.io._
 
-object HelloWoldBigData {
+import PackageTest.PBGS.ClassTest
+
+object HelloWoldBigData extends ClassTest {
   /* premier programme */
   val ma_var_imm : String = "Florent GOKOU" // variable immutable = constante
   private val une_var_imm : String =  "Formation Big Data" // variable à portée privée
 
+  /**
+   *
+   * @param nom
+   * @param prenom
+   * @param age
+   */
   class person( var nom : String, var prenom : String, var age : Int )
   BasicConfigurator.configure()
   private var trace_appli : Logger = LogManager.getLogger("Logger_Consol")
 
+  /**
+   *
+   * @param arg
+   */
   def main(arg: Array[String]) :Unit = {
 
+    val tt : Int = comptage_package("essai")
 
     val diviseur : Double = try{
       division(12,3)
@@ -52,9 +65,16 @@ object HelloWoldBigData {
 
   }
 
+
   // ma première fonction
   println("\n")
   println("Comptage_caracteres - Démarrage du traçage de la classe)")
+
+  /**
+   *
+   * @param texte
+   * @return
+   */
   def comptage_caracteres(texte : String) : Int = {
     //texte.trim.length()
     trace_appli.info("Démarrage du traçage de la classe")
