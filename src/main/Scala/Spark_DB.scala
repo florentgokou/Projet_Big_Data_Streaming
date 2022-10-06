@@ -68,7 +68,7 @@ object Spark_DB {
     */
 /*
     println("Spark & SQL Server : Interrogez les bases SQL Server")
-    val df_sqlserver = ss.read.jdbc("jdbc:sqlserver://DESKTOP-93Q8BKB\\SPARKSQLSERVER:1433;databaseName=jea_db","orders",props_prostgre)
+    val df_sqlserver = ss.read.jdbc("jdbc:sqlserver://LAPTOP-4M0841TL\\SPARKSQLSERVER\\SPARKSQLSERVER:1433;databaseName=jea_db","orders",props_sqlserver)
     println("Afficher les données des la base SQL Server")
     df_sqlserver.show(15)
 */
@@ -78,11 +78,13 @@ object Spark_DB {
     val df_sqlserver2 = ss.read
       .format("jdbc")
       .option("driver","com.microsoft.sqlserver.jdbc.SQLServerDriver")
-      .option("url", "jdbc:sqlserver://DESKTOP-93Q8BKB\\SPARKSQLSERVER:1433;databaseName=jea_db;integratedSecurity=true")
-      .option("dbtable", "orders")
+      .option("url", "jdbc:sqlserver://LAPTOP-4M0841TL\\SPARKSQLSERVER:1433;databaseName=jea_db;integratedSecurity=true")
+      //.option("dbtable", "orders")
+      .option("dbtable","(select state, city, sum(numunits * totalprice) as Commande_Totales from orders group by state, city) table_SqlServer")
       .load()
     println("Affichage du resultat - Autre methode avec sqlserver2")
     df_sqlserver2.show(20)
+
   }
 
 }

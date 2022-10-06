@@ -12,8 +12,6 @@ Pour que ce projet fonctionne, vous avez besoin des dépendances suivantes
 Pour installer l'application, il y a deux moyens : 
 Soit ulilisez la commande git pull pour récupérer le projet et le pousser sur votre PC
 
-
-
 # Auteur
 L'auteur de ce projet est le mandataire des éditions Juvénal & Associés.
 Dans le cadre de cette formation, c'est [Juvénal CHOKOGOUE](https://github.com/juvenaljvc)
@@ -29,5 +27,5 @@ Pour la formation Big Data Streamin, on a 2 auteurs/contributeurs
 
 # Licence
 Projet soumis à des droits d'auteurs et protégé par le copyright.
-Vous pouvez l'utiliser dans le cadre de vos projets, mais pas pour une utilisation copmmerciale
+Vous pouvez l'utiliser dans le cadre de vos projets, mais pas pour une utilisation commerciale
 
